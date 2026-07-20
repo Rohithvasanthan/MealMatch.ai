@@ -26,12 +26,21 @@ const PlatformResultSchema = new Schema(
   { _id: false },
 )
 
+const BestDealSchema = new Schema(
+  {
+    winner: { type: String, enum: ["swiggy", "zomato"], required: true },
+    reasoning: { type: String, required: true },
+  },
+  { _id: false },
+)
+
 const ComparisonCacheSchema = new Schema({
   cacheKey: { type: String, required: true, unique: true },
   query: { type: String, required: true },
   lat: { type: Number, required: true },
   lng: { type: Number, required: true },
   results: { type: [PlatformResultSchema], default: [] },
+  bestDeal: { type: BestDealSchema, default: null },
   createdAt: { type: Date, default: Date.now, expires: "10m" },
 })
 
