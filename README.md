@@ -14,12 +14,14 @@ See `docs/architecture.md` for the system design and phase-by-phase build plan.
 | scraper   | Python + FastAPI + Playwright              | `scraper/`  | 8000 |
 
 Data: MongoDB Atlas. Connection string configured via `server/.env` (`MONGODB_URI`).
+If `MONGODB_URI` is unset (or left as the `.env.example` placeholder), the
+server falls back to an in-memory MongoDB instance so it's runnable before an
+Atlas cluster is provisioned — data won't persist across restarts in that mode.
 
 ## Running locally
 
-Each service is run independently; copy `.env.example` to `.env` in `server/`
-and `scraper/` first (see each file for required values — the server needs a
-real `MONGODB_URI` from your Atlas cluster).
+Each service is run independently; copy `.env.example` to `.env` in `client/`,
+`server/`, and `scraper/` first (see each file for required values).
 
 ```bash
 # client
