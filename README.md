@@ -13,12 +13,13 @@ See `docs/architecture.md` for the system design and phase-by-phase build plan.
 | server    | Node + Express + TypeScript                | `server/`   | 4000 |
 | scraper   | Python + FastAPI + Playwright              | `scraper/`  | 8000 |
 
-Data: MongoDB Atlas (connection string configured via `server/.env`).
+Data: MongoDB Atlas. Connection string configured via `server/.env` (`MONGODB_URI`).
 
 ## Running locally
 
 Each service is run independently; copy `.env.example` to `.env` in `server/`
-and `scraper/` first (see each file for required values).
+and `scraper/` first (see each file for required values — the server needs a
+real `MONGODB_URI` from your Atlas cluster).
 
 ```bash
 # client
