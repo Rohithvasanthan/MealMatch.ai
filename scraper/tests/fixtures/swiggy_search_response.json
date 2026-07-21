@@ -1,0 +1,61 @@
+{
+  "statusCode": 0,
+  "data": {
+    "cards": [
+      {
+        "groupedCard": {
+          "cardGroupMap": {
+            "DISH": {
+              "cards": [
+                {
+                  "card": {
+                    "card": {
+                      "@type": "type.googleapis.com/swiggy.presentation.food.v2.DishGroup",
+                      "restaurant": {
+                        "info": {
+                          "id": "12345",
+                          "name": "Meghana Foods",
+                          "avgRating": "4.4",
+                          "sla": { "deliveryTime": 35, "maxDeliveryTime": 45 }
+                        }
+                      },
+                      "dishes": [
+                        {
+                          "info": {
+                            "id": "d1",
+                            "name": "Chicken Boneless Biryani",
+                            "price": 37500,
+                            "inStock": 1,
+                            "imageId": "abc123"
+                          }
+                        },
+                        {
+                          "info": {
+                            "id": "d2",
+                            "name": "Mutton Biryani (Sold Out)",
+                            "price": 45000,
+                            "inStock": 0,
+                            "imageId": "def456"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "groupedCard": {
+          "cardGroupMap": {
+            "RESTAURANT": {
+              "cards": []
+            }
+          }
+        }
+      }
+    ]
+  }
+}

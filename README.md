@@ -42,3 +42,16 @@ uvicorn app.main:app --reload --port 8000
 The server talks to the scraper via `SCRAPER_SERVICE_URL` (defaults to
 `http://localhost:8000`) — this is the only integration point, so the scraper
 can later move to its own deployment without any frontend changes.
+
+## Testing
+
+```bash
+# client — component tests (Vitest + React Testing Library)
+cd client && npm test
+
+# server — unit/integration tests (Vitest, scraper mocked)
+cd server && npm test
+
+# scraper — fixture-based parser tests (pytest)
+cd scraper && ./venv/Scripts/activate && pytest
+```
