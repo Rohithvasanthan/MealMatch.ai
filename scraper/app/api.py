@@ -8,12 +8,12 @@ from app.schemas.models import (
     SearchQuery,
     SuggestedResult,
 )
-from app.scrapers import swiggy, zomato
+from app.scrapers import blinkit, swiggy, zomato
 from app.scrapers.errors import ScraperError
 
 router = APIRouter(prefix="/scrape")
 
-MODULES = {"swiggy": swiggy, "zomato": zomato}
+MODULES = {"swiggy": swiggy, "zomato": zomato, "blinkit": blinkit}
 
 
 def _module(platform: Platform):

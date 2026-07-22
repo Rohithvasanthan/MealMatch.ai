@@ -1,4 +1,4 @@
-export type Platform = "swiggy" | "zomato"
+export type Platform = "swiggy" | "zomato" | "blinkit"
 export type Availability = "available" | "not_serviceable" | "error"
 export type ErrorCode =
   | "TIMEOUT"
@@ -17,7 +17,13 @@ export interface MenuItem {
   rating?: number
   etaMinutes?: number
   deliveryFee?: number
+  platformFee?: number
+  packingFee?: number
+  originalPrice?: number
+  offerText?: string
+  distanceKm?: number
   imageUrl?: string
+  itemUrl?: string
 }
 
 export interface PlatformSearchResult {
@@ -75,6 +81,14 @@ export interface SuggestedFoodsResult {
 }
 
 export interface ResolvedLocation {
+  displayName: string
+  city?: string
+  state?: string
+  lat: number
+  lng: number
+}
+
+export interface LocationSuggestion {
   displayName: string
   city?: string
   state?: string
