@@ -1,5 +1,6 @@
 import type {
   ComparisonResult,
+  LocationSuggestion,
   PlatformAvailability,
   ResolvedLocation,
   SuggestedFoodsResult,
@@ -38,6 +39,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function resolveLocation(lat: number, lng: number) {
   return request<ResolvedLocation>(`/location/resolve?lat=${lat}&lng=${lng}`)
+}
+
+export async function searchLocations(query: string) {
+  const { suggestions } = await request<{ suggestions: LocationSuggestion[] }>(
+    `/location/search?q=${encodeURIComponent(query)}`,
+  )
+  return suggestions
 }
 
 export function getPlatformAvailability(lat: number, lng: number) {

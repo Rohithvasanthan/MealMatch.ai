@@ -1,84 +1,145 @@
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { FloatingNav } from "@/components/FloatingNav"
-import { LocationBar } from "@/components/LocationBar"
-import { PlatformAvailability } from "@/components/PlatformAvailability"
-import { CompareSearch } from "@/components/CompareSearch"
-import { SuggestedFoods } from "@/components/SuggestedFoods"
-import { fadeUp, staggerContainer } from "@/lib/motion"
-import type { Coords } from "@/hooks/useGeolocation"
+import { lazy, Suspense, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { Compass, LoaderCircle, Sparkles } from "lucide-react"
+import { Navigation } from "@/components/Navigation"
+import { ProviderStatusStrip } from "@/components/ProviderStatusStrip"
+import { HeroSection } from "@/components/HeroSection"
+import { CategoryGrid } from "@/components/CategoryGrid"
+import { BestSavings } from "@/components/BestSavings"
+import { InfoAndReviews } from "@/components/InfoAndReviews"
+import { Footer } from "@/components/Footer"
+import { LocationOnboarding } from "@/components/LocationOnboarding"
+import { useLocation } from "@/lib/locationStore"
+import { useCompare } from "@/hooks/useMealMatchQueries"
 
-function BackgroundGlow() {
-  return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute -top-40 left-1/2 h-96 w-[36rem] -translate-x-1/2 rounded-full bg-primary/20 blur-[110px] dark:bg-primary/15" />
-      <div className="absolute top-72 -right-20 h-72 w-72 rounded-full bg-success/15 blur-[100px] dark:bg-success/10" />
-    </div>
-  )
-}
+const ComparisonPage = lazy(() =>
+  import("@/components/ComparisonPage").then((m) => ({ default: m.ComparisonPage })),
+)
 
-function SectionHeading({ eyebrow, title, id }: { eyebrow: string; title: string; id: string }) {
+function ComparisonPageFallback() {
   return (
-    <div className="space-y-1">
-      <p className="text-xs font-medium tracking-wide text-primary uppercase">{eyebrow}</p>
-      <h2 id={id} className="font-heading text-xl font-semibold tracking-tight text-balance sm:text-2xl">
-        {title}
-      </h2>
+    <div className="flex min-h-[400px] w-full items-center justify-center">
+      <LoaderCircle className="h-8 w-8 animate-spin text-brand-orange" />
     </div>
   )
 }
 
 function App() {
-  const [coords, setCoords] = useState<Coords | null>(null)
+  const { location, setLocation } = useLocation()
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [activeQuery, setActiveQuery] = useState("")
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
+
+  const coords = location ? { lat: location.lat, lng: location.lng } : null
+  const { data: comparisonResult, isLoading, isFetching, isError, refetch } = useCompare(coords, activeQuery)
+  const isSearching = activeQuery.trim().length > 0
+
+  const handleSearchSubmit = (query: string) => {
+    const trimmed = query.trim()
+    if (!trimmed) return
+    setActiveQuery(trimmed)
+    setRecentSearches((prev) => (prev.includes(trimmed) ? prev : [trimmed, ...prev.slice(0, 4)]))
+  }
+
+  const handleCategorySelect = (id: string, name: string) => {
+    setSelectedCategory(id)
+    handleSearchSubmit(name)
+  }
+
+  const handleClearRecent = () => setRecentSearches([])
+
+  const handleBack = () => {
+    setActiveQuery("")
+    setSelectedCategory(null)
+  }
+
+  if (!location) {
+    return <LocationOnboarding onSelect={setLocation} />
+  }
 
   return (
-    <div className="min-h-svh bg-background text-foreground">
-      <BackgroundGlow />
-      <FloatingNav />
+    <div className="relative flex min-h-screen flex-col bg-[#FAFAFA] pb-20 md:pb-0 dark:bg-gray-950">
+      <Navigation location={location} onChangeLocation={() => setPickerOpen(true)} />
+      {!isSearching && <ProviderStatusStrip coords={coords} />}
 
-      <main className="mx-auto max-w-5xl px-4 pb-24">
-        <motion.section
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-6 py-12 text-center sm:py-16"
-        >
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
-            Never overpay for delivery again
-          </h1>
-          <p className="mx-auto max-w-xl text-balance text-muted-foreground sm:text-lg">
-            MealMatch AI checks Swiggy and Zomato live, side by side, so you always know which one's the
-            better deal before you order.
-          </p>
-          <div className="flex justify-center">
-            <LocationBar onCoordsChange={setCoords} />
-          </div>
-          <div className="flex justify-center">
-            <PlatformAvailability coords={coords} />
-          </div>
-        </motion.section>
+      <AnimatePresence>
+        {pickerOpen && (
+          <LocationOnboarding
+            onSelect={(next) => {
+              setLocation(next)
+              setPickerOpen(false)
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="show"
-          className="space-y-16"
-        >
-          <motion.section variants={fadeUp} className="space-y-4" aria-labelledby="compare-heading">
-            <SectionHeading id="compare-heading" eyebrow="Live comparison" title="Compare a dish across platforms" />
-            <CompareSearch coords={coords} />
-          </motion.section>
+      <main className="mx-auto w-full max-w-7xl flex-grow px-6 py-6">
+        <AnimatePresence mode="wait">
+          {isSearching ? (
+            <motion.div
+              key="comparison-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Suspense fallback={<ComparisonPageFallback />}>
+                <ComparisonPage
+                  result={comparisonResult ?? null}
+                  loading={isLoading || isFetching}
+                  isError={isError}
+                  onBack={handleBack}
+                  onRetry={refetch}
+                />
+              </Suspense>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="home-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-12"
+            >
+              <HeroSection
+                onSearchSubmit={handleSearchSubmit}
+                recentSearches={recentSearches}
+                onClearRecent={handleClearRecent}
+              />
 
-          <motion.section variants={fadeUp} className="space-y-4" aria-labelledby="suggested-heading">
-            <SectionHeading id="suggested-heading" eyebrow="Discover" title="Popular near you" />
-            <SuggestedFoods coords={coords} />
-          </motion.section>
-        </motion.div>
+              <CategoryGrid selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} />
+
+              <BestSavings coords={coords} />
+
+              <InfoAndReviews />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
-      <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-        MealMatch AI · Prices are fetched live and can change between visits.
-      </footer>
+      <Footer />
+
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-gray-100 bg-white/80 px-6 py-2.5 backdrop-blur-lg md:hidden dark:border-white/10 dark:bg-gray-950/80">
+        <button
+          onClick={handleBack}
+          className={`flex cursor-pointer flex-col items-center gap-1 ${!isSearching ? "text-brand-orange" : "text-gray-400 dark:text-gray-500"}`}
+        >
+          <Compass className="h-5.5 w-5.5" />
+          <span className="text-[10px] font-bold">Discover</span>
+        </button>
+
+        <button
+          onClick={() => handleSearchSubmit("biryani")}
+          className="group flex cursor-pointer flex-col items-center gap-1 text-gray-400"
+        >
+          <div className="-mt-6 rounded-full bg-brand-orange p-2 text-white shadow-md shadow-brand-orange/25 transition-all group-hover:scale-105">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <span className="text-[10px] font-bold text-brand-orange">Quick Search</span>
+        </button>
+      </div>
     </div>
   )
 }

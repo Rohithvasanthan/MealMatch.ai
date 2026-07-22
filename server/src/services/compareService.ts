@@ -2,10 +2,10 @@ import { buildComparisonCacheKey, normalizeQuery } from "../utils/cacheKey.js"
 import { getCachedComparison, saveComparisonCache } from "./cacheService.js"
 import { recordSearch } from "./historyService.js"
 import { searchPlatform } from "./scraperClient.js"
-import { computeBestDeal } from "./scoringService.js"
+import { computeBestDeal, sortByPriority } from "./scoringService.js"
 import type { ComparisonResult, Platform, PlatformSearchResult } from "../types/domain.js"
 
-const PLATFORMS: Platform[] = ["swiggy", "zomato"]
+const PLATFORMS: Platform[] = ["swiggy", "zomato", "blinkit"]
 
 export async function compare(rawQuery: string, lat: number, lng: number): Promise<ComparisonResult> {
   const query = normalizeQuery(rawQuery)
@@ -18,7 +18,7 @@ export async function compare(rawQuery: string, lat: number, lng: number): Promi
     PLATFORMS.map((platform) => searchPlatform(platform, lat, lng, query)),
   )
 
-  const results: PlatformSearchResult[] = settled.map((outcome, i) => {
+  const settledResults: PlatformSearchResult[] = settled.map((outcome, i) => {
     if (outcome.status === "fulfilled") return outcome.value
     return {
       platform: PLATFORMS[i],
@@ -29,7 +29,8 @@ export async function compare(rawQuery: string, lat: number, lng: number): Promi
     }
   })
 
-  const bestDeal = computeBestDeal(results)
+  const bestDeal = computeBestDeal(settledResults)
+  const results = sortByPriority(settledResults)
   const result: Omit<ComparisonResult, "cached" | "timestamp"> = { query, lat, lng, results, bestDeal }
 
   await saveComparisonCache(cacheKey, result)

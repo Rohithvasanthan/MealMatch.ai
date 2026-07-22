@@ -3,7 +3,7 @@ import { getCachedSuggested, saveSuggestedCache } from "./cacheService.js"
 import { getSuggested } from "./scraperClient.js"
 import type { Platform, PlatformSuggestedResult, SuggestedFoodsResult } from "../types/domain.js"
 
-const PLATFORMS: Platform[] = ["swiggy", "zomato"]
+const PLATFORMS: Platform[] = ["swiggy", "zomato", "blinkit"]
 
 export async function getSuggestedFoods(lat: number, lng: number): Promise<SuggestedFoodsResult> {
   const cacheKey = buildSuggestedCacheKey(lat, lng)
@@ -13,7 +13,7 @@ export async function getSuggestedFoods(lat: number, lng: number): Promise<Sugge
 
   const settled = await Promise.allSettled(PLATFORMS.map((platform) => getSuggested(platform, lat, lng)))
 
-  const results: PlatformSuggestedResult[] = settled.map((outcome, i) => {
+  const settledResults: PlatformSuggestedResult[] = settled.map((outcome, i) => {
     if (outcome.status === "fulfilled") return outcome.value
     return {
       platform: PLATFORMS[i],
@@ -23,6 +23,11 @@ export async function getSuggestedFoods(lat: number, lng: number): Promise<Sugge
       errorMessage: outcome.reason instanceof Error ? outcome.reason.message : "Scraper request failed",
     }
   })
+
+  const AVAILABILITY_RANK: Record<string, number> = { available: 0, not_serviceable: 1, error: 2 }
+  const results = [...settledResults].sort(
+    (a, b) => AVAILABILITY_RANK[a.availability] - AVAILABILITY_RANK[b.availability],
+  )
 
   const result: Omit<SuggestedFoodsResult, "cached" | "timestamp"> = { lat, lng, results }
   await saveSuggestedCache(cacheKey, result)

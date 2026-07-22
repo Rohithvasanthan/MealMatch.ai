@@ -56,8 +56,9 @@ describe("compare", () => {
 
     expect(searchPlatform).toHaveBeenCalledWith("swiggy", LAT, LNG, "biryani")
     expect(searchPlatform).toHaveBeenCalledWith("zomato", LAT, LNG, "biryani")
+    expect(searchPlatform).toHaveBeenCalledWith("blinkit", LAT, LNG, "biryani")
     expect(result.cached).toBe(false)
-    expect(result.results).toHaveLength(2)
+    expect(result.results).toHaveLength(3)
     expect(saveComparisonCache).toHaveBeenCalledTimes(1)
     expect(recordSearch).toHaveBeenCalledWith("biryani", LAT, LNG)
   })

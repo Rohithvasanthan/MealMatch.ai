@@ -1,7 +1,7 @@
 import axios from "axios"
 import { env } from "../config/env.js"
 import { AppError } from "../lib/AppError.js"
-import type { ResolvedLocation } from "../types/domain.js"
+import type { LocationSuggestion, ResolvedLocation } from "../types/domain.js"
 
 const nominatimHttp = axios.create({
   baseURL: env.nominatimBaseUrl,
@@ -11,6 +11,18 @@ const nominatimHttp = axios.create({
 
 interface NominatimReverseResponse {
   display_name: string
+  address?: {
+    city?: string
+    town?: string
+    village?: string
+    state?: string
+  }
+}
+
+interface NominatimSearchResult {
+  display_name: string
+  lat: string
+  lon: string
   address?: {
     city?: string
     town?: string
@@ -35,5 +47,24 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Resolved
   } catch (err) {
     const message = axios.isAxiosError(err) ? err.message : "Unknown geocoding error"
     throw new AppError(502, "GEOCODING_FAILED", `Reverse geocoding failed: ${message}`)
+  }
+}
+
+export async function searchLocation(query: string): Promise<LocationSuggestion[]> {
+  try {
+    const { data } = await nominatimHttp.get<NominatimSearchResult[]>("/search", {
+      params: { q: query, format: "jsonv2", addressdetails: 1, countrycodes: "in", limit: 6 },
+    })
+
+    return data.map((r) => ({
+      displayName: r.display_name,
+      city: r.address?.city ?? r.address?.town ?? r.address?.village,
+      state: r.address?.state,
+      lat: Number(r.lat),
+      lng: Number(r.lon),
+    }))
+  } catch (err) {
+    const message = axios.isAxiosError(err) ? err.message : "Unknown geocoding error"
+    throw new AppError(502, "GEOCODING_FAILED", `Location search failed: ${message}`)
   }
 }

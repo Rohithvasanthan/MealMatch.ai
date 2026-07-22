@@ -1,14 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
-import { compareFood, getPlatformAvailability, getSuggestedFoods, resolveLocation } from "@/lib/api"
+import { compareFood, getPlatformAvailability, getSuggestedFoods } from "@/lib/api"
 import type { Coords } from "@/hooks/useGeolocation"
-
-export function useResolvedLocation(coords: Coords | null) {
-  return useQuery({
-    queryKey: ["location", coords],
-    queryFn: () => resolveLocation(coords!.lat, coords!.lng),
-    enabled: coords !== null,
-  })
-}
 
 export function usePlatformAvailability(coords: Coords | null) {
   return useQuery({
