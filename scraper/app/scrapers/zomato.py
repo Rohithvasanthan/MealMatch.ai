@@ -26,21 +26,18 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from app.core.config import settings
 from app.schemas.models import MenuItem, PlatformSearchResult, SuggestedFoodItem, SuggestedResult
 from app.scrapers.errors import ScraperError
+from app.scrapers.resilience import jitter, random_user_agent, random_viewport, retry_with_backoff
 
-BASE = "https://www.zomato.com"
-UA = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-)
 PRICE_RE = re.compile(r"[\d,]+")
+BASE = "https://www.zomato.com"
 
 
 async def _new_context(browser: Browser):
     context = await browser.new_context(
-        user_agent=UA,
+        user_agent=random_user_agent(),
         locale="en-IN",
         timezone_id="Asia/Kolkata",
-        viewport={"width": 1366, "height": 768},
+        viewport=random_viewport(),
         extra_http_headers={"Accept-Language": "en-IN,en;q=0.9"},
         geolocation={"latitude": 0, "longitude": 0},
         permissions=["geolocation"],
@@ -49,8 +46,12 @@ async def _new_context(browser: Browser):
 
 
 async def _goto(page, url: str):
+    await jitter()
     try:
-        await page.goto(url, timeout=settings.nav_timeout_ms, wait_until="networkidle")
+        await retry_with_backoff(
+            lambda: page.goto(url, timeout=settings.nav_timeout_ms, wait_until="networkidle"),
+            attempts=2,
+        )
     except PlaywrightTimeoutError as e:
         raise ScraperError("TIMEOUT", "Zomato took too long to respond") from e
     except Exception as e:
@@ -102,6 +103,7 @@ async def search(browser: Browser, lat: float, lng: float, query: str) -> Platfo
             if not price_match:
                 continue
             href = await card.get_attribute("href") or f"zomato-{i}"
+            item_url = f"{BASE}{href}" if href.startswith("/") else href
             items.append(
                 MenuItem(
                     id=href,
@@ -110,6 +112,7 @@ async def search(browser: Browser, lat: float, lng: float, query: str) -> Platfo
                     restaurant_id=href,
                     price=float(price_match.group().replace(",", "")),
                     delivery_fee=None,
+                    item_url=item_url,
                 )
             )
 
