@@ -1,0 +1,49 @@
+# Render Blueprint — deploys the backend (native Node) and the scraper
+# (Docker, for Playwright/Chromium) as two separate web services.
+#
+# NOTE: Render's Blueprint schema evolves; verify field names against
+# Render's current "Blueprint Spec" docs before relying on this for a
+# one-click deploy. Treat docs/DEPLOYMENT.md's manual dashboard steps as the
+# authoritative path — this file is a convenience starting point, not a
+# guarantee.
+services:
+  - type: web
+    name: mealmatch-server
+    env: node
+    plan: starter
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # set to your MongoDB Atlas connection string in the Render dashboard
+      - key: SCRAPER_SERVICE_URL
+        sync: false # set to the deployed mealmatch-scraper service URL
+      - key: CORS_ORIGIN
+        sync: false # set to your deployed Vercel frontend URL
+      - key: NOMINATIM_USER_AGENT
+        value: "MealMatchAI/1.0 (replace-with-your-contact-email)"
+      - key: SCRAPER_TIMEOUT_MS
+        value: "30000"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: RATE_LIMIT_MAX
+        value: "30"
+
+  - type: web
+    name: mealmatch-scraper
+    env: docker
+    dockerfilePath: ./Dockerfile
+    rootDir: scraper
+    # Playwright/Chromium is memory-hungry — the free tier's 512MB is not
+    # reliable for this workload; a paid plan with more RAM is recommended.
+    plan: standard
+    healthCheckPath: /health
+    envVars:
+      - key: HEADLESS
+        value: "true"
+      - key: NAV_TIMEOUT_MS
+        value: "20000"
