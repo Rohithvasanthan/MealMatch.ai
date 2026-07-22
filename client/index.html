@@ -6,10 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Compare live Swiggy and Zomato prices, delivery fees, and ETAs side by side."
+      content="Compare live food and grocery prices, delivery fees, and ETAs across Swiggy, Zomato and Blinkit side by side."
     />
-    <meta name="theme-color" content="#6248e8" />
-    <title>MealMatch AI — Compare Swiggy vs Zomato</title>
+    <meta name="theme-color" content="#ff6b00" />
+    <title>MealMatch AI — Live Food & Grocery Price Comparison</title>
+    <script>
+      // Applied before paint to avoid a flash of the wrong theme; ThemeProvider takes over after mount.
+      (function () {
+        try {
+          var stored = localStorage.getItem("mealmatch:theme")
+          var isDark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches
+          if (isDark) document.documentElement.classList.add("dark")
+          document.documentElement.style.colorScheme = isDark ? "dark" : "light"
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

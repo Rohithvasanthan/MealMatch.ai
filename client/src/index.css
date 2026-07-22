@@ -1,161 +1,190 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --color-success: var(--success);
-    --color-success-foreground: var(--success-foreground);
-    --color-warning: var(--warning);
-    --color-warning-foreground: var(--warning-foreground);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-:root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.16 0.012 285);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.16 0.012 285);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.16 0.012 285);
-    --primary: oklch(0.56 0.19 264);
-    --primary-foreground: oklch(0.99 0 0);
-    --secondary: oklch(0.968 0.004 285);
-    --secondary-foreground: oklch(0.24 0.02 285);
-    --muted: oklch(0.968 0.004 285);
-    --muted-foreground: oklch(0.5 0.015 285);
-    --accent: oklch(0.94 0.03 264);
-    --accent-foreground: oklch(0.3 0.08 264);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.914 0.005 285);
-    --input: oklch(0.914 0.005 285);
-    --ring: oklch(0.62 0.17 264);
-    --success: oklch(0.63 0.15 152);
-    --success-foreground: oklch(0.99 0 0);
-    --warning: oklch(0.76 0.15 78);
-    --warning-foreground: oklch(0.24 0.03 78);
-    --chart-1: oklch(0.56 0.19 264);
-    --chart-2: oklch(0.63 0.15 152);
-    --chart-3: oklch(0.556 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.75rem;
-    --sidebar: oklch(0.99 0 0);
-    --sidebar-foreground: oklch(0.16 0.012 285);
-    --sidebar-primary: oklch(0.56 0.19 264);
-    --sidebar-primary-foreground: oklch(0.99 0 0);
-    --sidebar-accent: oklch(0.968 0.004 285);
-    --sidebar-accent-foreground: oklch(0.24 0.02 285);
-    --sidebar-border: oklch(0.914 0.005 285);
-    --sidebar-ring: oklch(0.62 0.17 264);
-}
-
-.dark {
-    --background: oklch(0.15 0.012 285);
-    --foreground: oklch(0.97 0.002 285);
-    --card: oklch(0.19 0.014 285);
-    --card-foreground: oklch(0.97 0.002 285);
-    --popover: oklch(0.19 0.014 285);
-    --popover-foreground: oklch(0.97 0.002 285);
-    --primary: oklch(0.68 0.18 264);
-    --primary-foreground: oklch(0.15 0.02 264);
-    --secondary: oklch(0.26 0.014 285);
-    --secondary-foreground: oklch(0.97 0.002 285);
-    --muted: oklch(0.26 0.014 285);
-    --muted-foreground: oklch(0.66 0.015 285);
-    --accent: oklch(0.28 0.05 264);
-    --accent-foreground: oklch(0.9 0.05 264);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.68 0.18 264);
-    --success: oklch(0.7 0.16 152);
-    --success-foreground: oklch(0.12 0.02 152);
-    --warning: oklch(0.78 0.15 78);
-    --warning-foreground: oklch(0.18 0.03 78);
-    --chart-1: oklch(0.68 0.18 264);
-    --chart-2: oklch(0.7 0.16 152);
-    --chart-3: oklch(0.556 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.19 0.014 285);
-    --sidebar-foreground: oklch(0.97 0.002 285);
-    --sidebar-primary: oklch(0.68 0.18 264);
-    --sidebar-primary-foreground: oklch(0.15 0.02 264);
-    --sidebar-accent: oklch(0.26 0.014 285);
-    --sidebar-accent-foreground: oklch(0.97 0.002 285);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.68 0.18 264);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground antialiased;
-    }
-  html {
-    @apply font-sans;
-    scroll-behavior: smooth;
-    }
-  ::selection {
-    @apply bg-primary/25 text-foreground;
-    }
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --animate-shimmer: shimmer 1.8s ease-in-out infinite;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-orange: #ff6b00;
+  --color-brand-orange-hover: #e55a00;
+
+  --animate-shimmer: shimmer 2.5s infinite linear;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-spin-slow: spin 12s linear infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
   @keyframes shimmer {
-    from {
-      transform: translateX(-100%);
+    0% {
+      background-position: -200% 0;
     }
-    to {
-      transform: translateX(100%);
+    100% {
+      background-position: 200% 0;
     }
   }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+}
+
+body {
+  background-color: #fbfbfc;
+  color: #121316;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.dark body {
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+
+/* Smooth, non-jarring theme switch across every surface — Linear/Vercel-style crossfade.
+   Paint-only properties (no box-shadow/transform) so this stays cheap even with long result lists. */
+* {
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+/* Premium Linear/Stripe style card layer */
+.premium-card {
+  background: #ffffff;
+  border: 1px solid rgba(228, 230, 235, 0.7);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 4px 12px rgba(18, 19, 22, 0.03);
+  border-radius: 24px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-card:hover {
+  border-color: rgba(255, 107, 0, 0.15);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.01),
+    0 12px 32px rgba(255, 107, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.dark .premium-card {
+  background: #131316;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.dark .premium-card:hover {
+  border-color: rgba(255, 107, 0, 0.25);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.3),
+    0 12px 32px rgba(255, 107, 0, 0.1);
+}
+
+/* Glassmorphism utility for light panels */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 8px 24px rgba(18, 19, 22, 0.04);
+}
+
+.dark .glass-panel {
+  background: rgba(19, 19, 22, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Luxury ticket coupon visual cutouts */
+.ticket-stub {
+  position: relative;
+  background: #ffffff;
+}
+
+.ticket-stub::before,
+.ticket-stub::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: #fbfbfc;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  border: 1px solid rgba(228, 230, 235, 0.7);
+  z-index: 10;
+}
+
+.ticket-stub::before {
+  left: -8px;
+  box-shadow: inset -3px 0 3px rgba(0, 0, 0, 0.01);
+}
+
+.ticket-stub::after {
+  right: -8px;
+  box-shadow: inset 3px 0 3px rgba(0, 0, 0, 0.01);
+}
+
+.dark .ticket-stub {
+  background: #131316;
+}
+
+.dark .ticket-stub::before,
+.dark .ticket-stub::after {
+  background: #09090b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Real-time glowing badge anims */
+.gold-glow {
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.15);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.emerald-glow {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Custom scrollbar to keep it clean */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(18, 19, 22, 0.08);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(18, 19, 22, 0.15);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {

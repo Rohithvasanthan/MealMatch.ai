@@ -2,8 +2,8 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MotionConfig } from "framer-motion"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/sonner"
+import { LocationProvider } from "@/lib/locationStore"
+import { ThemeProvider } from "@/lib/themeStore"
 import "./index.css"
 import App from "./App.tsx"
 
@@ -18,13 +18,14 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
-      <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion="user">
+      <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <App />
-          <Toaster />
+          <LocationProvider>
+            <App />
+          </LocationProvider>
         </QueryClientProvider>
-      </MotionConfig>
-    </ThemeProvider>
+      </ThemeProvider>
+    </MotionConfig>
   </StrictMode>,
 )
