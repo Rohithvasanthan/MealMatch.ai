@@ -13,7 +13,7 @@ const SuggestedItemSchema = new Schema(
 
 const PlatformSuggestedSchema = new Schema(
   {
-    platform: { type: String, enum: ["swiggy", "zomato"], required: true },
+    platform: { type: String, enum: ["swiggy", "zomato", "blinkit"], required: true },
     availability: { type: String, enum: ["available", "not_serviceable", "error"], required: true },
     items: { type: [SuggestedItemSchema], default: [] },
     errorCode: { type: String },

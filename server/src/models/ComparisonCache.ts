@@ -10,14 +10,22 @@ const MenuItemSchema = new Schema(
     rating: { type: Number },
     etaMinutes: { type: Number },
     deliveryFee: { type: Number },
+    platformFee: { type: Number },
+    packingFee: { type: Number },
+    originalPrice: { type: Number },
+    offerText: { type: String },
+    distanceKm: { type: Number },
     imageUrl: { type: String },
+    itemUrl: { type: String },
   },
   { _id: false },
 )
 
+const PLATFORMS = ["swiggy", "zomato", "blinkit"]
+
 const PlatformResultSchema = new Schema(
   {
-    platform: { type: String, enum: ["swiggy", "zomato"], required: true },
+    platform: { type: String, enum: PLATFORMS, required: true },
     availability: { type: String, enum: ["available", "not_serviceable", "error"], required: true },
     items: { type: [MenuItemSchema], default: [] },
     errorCode: { type: String },
@@ -28,7 +36,7 @@ const PlatformResultSchema = new Schema(
 
 const BestDealSchema = new Schema(
   {
-    winner: { type: String, enum: ["swiggy", "zomato"], required: true },
+    winner: { type: String, enum: PLATFORMS, required: true },
     reasoning: { type: String, required: true },
   },
   { _id: false },
