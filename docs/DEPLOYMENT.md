@@ -82,7 +82,7 @@ kind of step this project is instructed to pause at rather than fabricate.
 1. Render dashboard → **New → Web Service** → same GitHub repo.
 2. **Root Directory:** `server`
 3. **Runtime:** Node
-4. **Build Command:** `npm install && npm run build`
+4. **Build Command:** `npm install --include=dev && npm run build` (NODE_ENV=production makes plain `npm install` skip devDependencies, which breaks the `tsc` build — see the env var note below)
 5. **Start Command:** `npm start`
 6. **Health Check Path:** `/health`
 7. **Environment variables:**
