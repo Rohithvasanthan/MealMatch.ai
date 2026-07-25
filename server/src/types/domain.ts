@@ -1,4 +1,4 @@
-export type Platform = "swiggy" | "zomato" | "blinkit"
+export type Platform = "swiggy" | "zomato" | "blinkit" | "zepto" | "instamart" | "bigbasket"
 export type Availability = "available" | "not_serviceable" | "error"
 export type ErrorCode =
   | "TIMEOUT"
@@ -40,6 +40,7 @@ export interface SuggestedItem {
   restaurantName: string
   price: number
   imageUrl?: string
+  itemUrl?: string
 }
 
 export interface PlatformSuggestedResult {

@@ -3,7 +3,7 @@ import { getCachedSuggested, saveSuggestedCache } from "./cacheService.js"
 import { getSuggested } from "./scraperClient.js"
 import type { Platform, PlatformSuggestedResult, SuggestedFoodsResult } from "../types/domain.js"
 
-const PLATFORMS: Platform[] = ["swiggy", "zomato", "blinkit"]
+const PLATFORMS: Platform[] = ["swiggy", "zomato", "blinkit", "zepto", "instamart", "bigbasket"]
 
 export async function getSuggestedFoods(lat: number, lng: number): Promise<SuggestedFoodsResult> {
   const cacheKey = buildSuggestedCacheKey(lat, lng)

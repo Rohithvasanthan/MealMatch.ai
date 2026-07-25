@@ -141,6 +141,7 @@ async def suggested(browser: Browser, lat: float, lng: float) -> SuggestedResult
             restaurant_name=i.restaurant_name,
             price=i.price,
             image_url=i.image_url,
+            item_url=i.item_url,
         )
         for i in result.items[:10]
     ]

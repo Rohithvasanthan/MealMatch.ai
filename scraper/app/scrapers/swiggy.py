@@ -205,6 +205,7 @@ async def suggested(browser: Browser, lat: float, lng: float) -> SuggestedResult
                         restaurant_name=dish.restaurant_name,
                         price=dish.price,
                         image_url=dish.image_url,
+                        item_url=dish.item_url,
                     )
                 )
                 break

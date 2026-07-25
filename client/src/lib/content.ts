@@ -23,7 +23,7 @@ export const FAQS: FAQItem[] = [
   {
     question: "How does MealMatch AI compare prices?",
     answer:
-      "MealMatch AI runs a live Playwright-driven scrape of Swiggy, Zomato and Blinkit for your search at your current location, in parallel, every time you search. There is no cached catalog and no simulated data — every price shown was fetched from the platform moments ago. More providers (Zepto, Instamart, BigBasket, Magicpin and others) are on the roadmap and shown as 'Coming Soon' until they're verified live.",
+      "MealMatch AI classifies your search as a food or grocery query, then runs a live Playwright-driven scrape of every matching live platform — Swiggy and Zomato for food, Blinkit and Zepto for grocery — in parallel, every time you search. There is no cached catalog and no simulated data — every price shown was fetched from the platform moments ago. More providers (Instamart, BigBasket, Magicpin and others) are on the roadmap and shown as 'Coming Soon' until they're verified live.",
   },
   {
     question: "Why do some searches only show one platform?",

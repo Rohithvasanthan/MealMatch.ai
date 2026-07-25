@@ -207,7 +207,7 @@ async def suggested(browser: Browser, lat: float, lng: float) -> SuggestedResult
                 items.append(
                     SuggestedFoodItem(
                         id=p.id, name=p.name, restaurant_name=p.restaurant_name,
-                        price=p.price, image_url=p.image_url,
+                        price=p.price, image_url=p.image_url, item_url=p.item_url,
                     )
                 )
                 break

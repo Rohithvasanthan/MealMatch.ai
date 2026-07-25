@@ -1,0 +1,81 @@
+{
+  "layout": [
+    {
+      "widgetId": "PRODUCT_GRID",
+      "data": {
+        "resolver": {
+          "data": {
+            "items": [
+              {
+                "productResponse": {
+                  "outOfStock": false,
+                  "sellingPrice": 2600,
+                  "mrp": 2700,
+                  "product": {
+                    "name": "Godrej Jersey Toned Milk",
+                    "brand": "Godrej Jersey"
+                  },
+                  "productVariant": {
+                    "id": "ba77f9b3-0525-4ce8-bc4b-a2480419b780",
+                    "images": [
+                      { "path": "cms/product_variant/8fd1fa19-56f7-4f23-8a0d-625fc669cec2.jpeg" }
+                    ]
+                  }
+                }
+              },
+              {
+                "productResponse": {
+                  "outOfStock": true,
+                  "sellingPrice": 3000,
+                  "mrp": 3000,
+                  "product": {
+                    "name": "Amul Taaza Toned Milk",
+                    "brand": "Amul"
+                  },
+                  "productVariant": {
+                    "id": "9d447ba5-1d35-46e1-bc64-e932135d026f",
+                    "images": []
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "widgetId": "PRODUCT_GRID",
+      "data": {
+        "resolver": {
+          "data": {
+            "items": [
+              {
+                "productResponse": {
+                  "outOfStock": false,
+                  "sellingPrice": 3200,
+                  "mrp": 3200,
+                  "product": {
+                    "name": "Nandini Toned Fresh Milk Pouch",
+                    "brand": "Nandini"
+                  },
+                  "productVariant": {
+                    "id": "25eb526c-9c26-48cd-95a3-8e4058910f8a",
+                    "images": []
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "widgetId": "AUTO_SUGGEST_V2",
+      "data": {
+        "resolver": {
+          "data": {}
+        }
+      }
+    }
+  ]
+}

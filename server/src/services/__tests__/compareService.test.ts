@@ -43,7 +43,7 @@ describe("compare", () => {
     expect(saveComparisonCache).not.toHaveBeenCalled()
   })
 
-  it("queries both platforms in parallel on a cache miss and caches the result", async () => {
+  it("queries only food platforms in parallel for a food query and caches the result", async () => {
     searchPlatform.mockImplementation((platform: string) =>
       Promise.resolve({
         platform,
@@ -56,11 +56,53 @@ describe("compare", () => {
 
     expect(searchPlatform).toHaveBeenCalledWith("swiggy", LAT, LNG, "biryani")
     expect(searchPlatform).toHaveBeenCalledWith("zomato", LAT, LNG, "biryani")
-    expect(searchPlatform).toHaveBeenCalledWith("blinkit", LAT, LNG, "biryani")
+    expect(searchPlatform).not.toHaveBeenCalledWith("blinkit", LAT, LNG, "biryani")
     expect(result.cached).toBe(false)
-    expect(result.results).toHaveLength(3)
+    expect(result.results).toHaveLength(2)
     expect(saveComparisonCache).toHaveBeenCalledTimes(1)
     expect(recordSearch).toHaveBeenCalledWith("biryani", LAT, LNG)
+  })
+
+  it("queries only grocery platforms for a grocery query", async () => {
+    searchPlatform.mockImplementation((platform: string) =>
+      Promise.resolve({
+        platform,
+        availability: "available",
+        items: [{ id: "1", name: "Toned Milk 500ml", restaurantName: "Blinkit", restaurantId: "r1", price: 28 }],
+      }),
+    )
+
+    const result = await compare("milk", LAT, LNG)
+
+    expect(searchPlatform).toHaveBeenCalledWith("blinkit", LAT, LNG, "milk")
+    expect(searchPlatform).toHaveBeenCalledWith("zepto", LAT, LNG, "milk")
+    expect(searchPlatform).toHaveBeenCalledWith("instamart", LAT, LNG, "milk")
+    expect(searchPlatform).toHaveBeenCalledWith("bigbasket", LAT, LNG, "milk")
+    expect(searchPlatform).not.toHaveBeenCalledWith("swiggy", LAT, LNG, "milk")
+    expect(searchPlatform).not.toHaveBeenCalledWith("zomato", LAT, LNG, "milk")
+    expect(result.results).toHaveLength(4)
+    expect(result.results.every((r) => ["blinkit", "zepto", "instamart", "bigbasket"].includes(r.platform))).toBe(
+      true,
+    )
+  })
+
+  it("filters out items unrelated to the query", async () => {
+    searchPlatform.mockImplementation((platform: string) =>
+      Promise.resolve({
+        platform,
+        availability: "available",
+        items: [
+          { id: "1", name: "Chicken Biryani", restaurantName: "Meghana", restaurantId: "r1", price: 250 },
+          { id: "2", name: "Paneer Tikka", restaurantName: "Meghana", restaurantId: "r1", price: 180 },
+        ],
+      }),
+    )
+
+    const result = await compare("biryani", LAT, LNG)
+
+    const swiggy = result.results.find((r) => r.platform === "swiggy")
+    expect(swiggy?.items).toHaveLength(1)
+    expect(swiggy?.items[0].name).toBe("Chicken Biryani")
   })
 
   it("turns a rejected platform call into a structured per-platform error instead of failing the whole request", async () => {

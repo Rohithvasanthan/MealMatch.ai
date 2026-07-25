@@ -2,7 +2,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-Platform = Literal["swiggy", "zomato", "blinkit"]
+Platform = Literal["swiggy", "zomato", "blinkit", "zepto", "instamart", "bigbasket"]
 Availability = Literal["available", "not_serviceable", "error"]
 ErrorCode = Literal[
     "TIMEOUT", "BLOCKED", "NOT_SERVICEABLE", "ITEM_NOT_FOUND", "PARSE_ERROR", "UPSTREAM_ERROR"
@@ -50,6 +50,7 @@ class SuggestedFoodItem(BaseModel):
     restaurant_name: str
     price: float
     image_url: Optional[str] = None
+    item_url: Optional[str] = None
 
 
 class SuggestedResult(BaseModel):

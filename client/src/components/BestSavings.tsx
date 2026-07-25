@@ -1,3 +1,4 @@
+import type { ElementType } from "react"
 import { CheckCircle2, ImageOff } from "lucide-react"
 import { motion } from "framer-motion"
 import type { Coords } from "@/hooks/useGeolocation"
@@ -7,13 +8,17 @@ import type { SuggestedItem } from "@/types/api"
 
 function ItemCard({ item, platform, index }: { item: SuggestedItem; platform: string; index: number }) {
   const meta = platformMeta(platform)
+  const Wrapper: ElementType = item.itemUrl ? motion.a : motion.div
   return (
-    <motion.div
+    <Wrapper
+      {...(item.itemUrl ? { href: item.itemUrl, target: "_blank", rel: "noreferrer noopener" } : {})}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ type: "spring", stiffness: 90, damping: 14, delay: index * 0.05 }}
-      className="premium-card group flex h-full flex-col overflow-hidden border-gray-100/70"
+      className={`premium-card group flex h-full flex-col overflow-hidden border-gray-100/70 ${
+        item.itemUrl ? "cursor-pointer" : ""
+      }`}
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-gray-50">
         {item.imageUrl ? (
@@ -50,7 +55,7 @@ function ItemCard({ item, platform, index }: { item: SuggestedItem; platform: st
           <span className="font-display text-xl font-black text-gray-900 dark:text-white">₹{item.price}</span>
         </div>
       </div>
-    </motion.div>
+    </Wrapper>
   )
 }
 

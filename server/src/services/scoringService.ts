@@ -1,6 +1,22 @@
 import type { BestDeal, MenuItem, Platform, PlatformSearchResult } from "../types/domain.js"
 
-const PLATFORM_NAMES: Record<Platform, string> = { swiggy: "Swiggy", zomato: "Zomato", blinkit: "Blinkit" }
+export const PLATFORM_NAMES: Record<Platform, string> = {
+  swiggy: "Swiggy",
+  zomato: "Zomato",
+  blinkit: "Blinkit",
+  zepto: "Zepto",
+  instamart: "Instamart",
+  bigbasket: "BigBasket",
+}
+
+export const PLATFORM_CATEGORY: Record<Platform, "food" | "grocery"> = {
+  swiggy: "food",
+  zomato: "food",
+  blinkit: "grocery",
+  zepto: "grocery",
+  instamart: "grocery",
+  bigbasket: "grocery",
+}
 
 const TIE_EPSILON = 0.01
 

@@ -168,6 +168,7 @@ export async function getSuggested(
           restaurant_name: string
           price: number
           image_url?: string
+          item_url?: string
         }>
         error_code?: PlatformSuggestedResult["errorCode"]
         error_message?: string
@@ -188,6 +189,7 @@ export async function getSuggested(
         restaurantName: item.restaurant_name,
         price: item.price,
         imageUrl: item.image_url,
+        itemUrl: item.item_url,
       })),
     }
   } catch (err) {
