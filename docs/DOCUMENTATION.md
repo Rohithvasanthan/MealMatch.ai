@@ -32,8 +32,8 @@ MealMatch AI is a three-service web application (React client, Node/Express
 API server, Python/FastAPI+Playwright scraper) plus a MongoDB data layer,
 built to answer one question fast: *"where is this item cheapest, right
 now, near me?"* — across food delivery (Swiggy, Zomato) and grocery
-quick-commerce (Blinkit), with more providers architected-for but not yet
-live-verified (see §17).
+quick-commerce (Blinkit, Zepto), with more providers architected-for but not
+yet live-verified (see §17).
 
 ## 2. Problem Statement
 
@@ -512,7 +512,7 @@ Each hop is a plain environment-variable-configured URL — no service hardcodes
 
 Stated plainly, not hidden:
 
-- **Only 3 of the ~11 commonly-requested providers are actually live-scraped** (Swiggy, Zomato, Blinkit). Zepto, Instamart, BigBasket, JioMart, Magicpin, EatSure, ONDC, and Rapido Food are registered in the UI as visible "Coming Soon" cards, not faked with placeholder data.
+- **Only 4 of the ~11 commonly-requested providers are actually live-scraped** (Swiggy, Zomato, Blinkit, Zepto). Instamart and BigBasket have scraper modules implemented and registered in the scraper service, but are not yet promoted to `live` in the frontend registry pending further verification. JioMart, Magicpin, EatSure, ONDC, and Rapido Food are registered in the UI as visible "Coming Soon" cards, not faked with placeholder data.
 - **Zomato could not be verified live during this project's development** — this development network is blocked by Zomato's edge at the TLS/network level (confirmed via both `curl` and a real headless browser; every other tested site, including Swiggy, loads normally). Zomato's DOM selectors are therefore best-effort and unverified against the live site.
 - **Live scraping is inherently fragile.** Swiggy, Zomato, and Blinkit can all change their DOM structure or API response shape at any time without notice, which would silently break extraction until the code is updated — there is no automated alerting for this beyond the scraper's own error-rate becoming visible in logs.
 - **Delivery/platform/packing fees are usually `null`.** None of the three providers' public search endpoints expose these — they're computed at checkout — so the "final cost" formula supports them but has real data to add in only sparingly (Swiggy exposes no fee at all; Blinkit and Zomato similarly don't expose it pre-checkout).
@@ -523,7 +523,7 @@ Stated plainly, not hidden:
 
 ## 18. Future Roadmap
 
-- **More live providers** — Zepto and Instamart are architecturally the closest fits (grocery quick-commerce, structurally similar to the already-working Blinkit adapter).
+- **More live providers** — Instamart and BigBasket already have scraper modules built (same interface as Zepto/Blinkit); promoting them to `live` just needs verification against real traffic and flipping their status in `client/src/lib/platforms.ts`.
 - **AI-powered recommendations** — using search history (already logged, currently unused beyond storage) to suggest items/cravings.
 - **Coupon/offer aggregation** — surfacing provider-side promo codes where discoverable, beyond the MRP-vs-price discount already shown for Blinkit.
 - **Shareable/bookmarkable search URLs** — introduce client-side routing so a comparison result has its own URL.
