@@ -8,7 +8,7 @@ const PLATFORMS: Platform[] = ["swiggy", "zomato", "eatsure", "blinkit", "zepto"
 // See platformsService.ts for why this is throttled rather than fully
 // parallel — `getSuggested` also runs several searches per platform
 // internally, making this the heaviest of the three fan-out endpoints.
-const SUGGESTED_CONCURRENCY = 3
+const SUGGESTED_CONCURRENCY = 2
 
 export async function getSuggestedFoods(lat: number, lng: number): Promise<SuggestedFoodsResult> {
   const cacheKey = buildSuggestedCacheKey(lat, lng)

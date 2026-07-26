@@ -10,7 +10,7 @@ import type { Platform, PlatformAvailability } from "../types/domain.js"
 // Swiggy, the one platform that doesn't need a full page render, succeeded
 // while every DOM-driven platform hit the scraper request timeout). Capping
 // how many run at once trades a little latency for actually completing.
-const AVAILABILITY_CONCURRENCY = 3
+const AVAILABILITY_CONCURRENCY = 2
 
 export async function getPlatformAvailability(lat: number, lng: number): Promise<PlatformAvailability[]> {
   const cacheKey = buildPlatformAvailabilityCacheKey(lat, lng)

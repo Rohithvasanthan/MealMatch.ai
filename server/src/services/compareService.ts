@@ -9,7 +9,7 @@ import type { ComparisonResult, Platform, PlatformSearchResult } from "../types/
 
 const PLATFORMS: Platform[] = ["swiggy", "zomato", "eatsure", "blinkit", "zepto", "instamart", "bigbasket"]
 // See platformsService.ts for why this is throttled rather than fully parallel.
-const SEARCH_CONCURRENCY = 3
+const SEARCH_CONCURRENCY = 2
 
 export async function compare(rawQuery: string, lat: number, lng: number): Promise<ComparisonResult> {
   const query = normalizeQuery(rawQuery)
