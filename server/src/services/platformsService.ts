@@ -1,7 +1,16 @@
 import { getCachedPlatformAvailability, savePlatformAvailabilityCache } from "./cacheService.js"
 import { checkAvailability } from "./scraperClient.js"
 import { buildPlatformAvailabilityCacheKey } from "../utils/cacheKey.js"
+import { mapWithConcurrency } from "../utils/concurrency.js"
 import type { Platform, PlatformAvailability } from "../types/domain.js"
+
+// The scraper runs every request through one shared browser instance — an
+// unthrottled sweep across all 7 platforms at once can starve each other
+// for resources on a memory-constrained deploy and time out (verified live:
+// Swiggy, the one platform that doesn't need a full page render, succeeded
+// while every DOM-driven platform hit the scraper request timeout). Capping
+// how many run at once trades a little latency for actually completing.
+const AVAILABILITY_CONCURRENCY = 3
 
 export async function getPlatformAvailability(lat: number, lng: number): Promise<PlatformAvailability[]> {
   const cacheKey = buildPlatformAvailabilityCacheKey(lat, lng)
@@ -10,8 +19,8 @@ export async function getPlatformAvailability(lat: number, lng: number): Promise
   if (cached) return cached
 
   const platforms: Platform[] = ["swiggy", "zomato", "eatsure", "blinkit", "zepto", "instamart", "bigbasket"]
-  const results = await Promise.allSettled(
-    platforms.map((platform) => checkAvailability(platform, lat, lng)),
+  const results = await mapWithConcurrency(platforms, AVAILABILITY_CONCURRENCY, (platform) =>
+    checkAvailability(platform, lat, lng),
   )
 
   const settled: PlatformAvailability[] = results.map((result, i) => {

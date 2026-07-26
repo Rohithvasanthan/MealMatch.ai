@@ -1,4 +1,5 @@
 import { buildComparisonCacheKey, normalizeQuery } from "../utils/cacheKey.js"
+import { mapWithConcurrency } from "../utils/concurrency.js"
 import { getCachedComparison, saveComparisonCache } from "./cacheService.js"
 import { recordSearch } from "./historyService.js"
 import { classifyQuery, filterRelevantItems } from "./relevanceService.js"
@@ -7,6 +8,8 @@ import { computeBestDeal, PLATFORM_CATEGORY, PLATFORM_NAMES, sortByPriority } fr
 import type { ComparisonResult, Platform, PlatformSearchResult } from "../types/domain.js"
 
 const PLATFORMS: Platform[] = ["swiggy", "zomato", "eatsure", "blinkit", "zepto", "instamart", "bigbasket"]
+// See platformsService.ts for why this is throttled rather than fully parallel.
+const SEARCH_CONCURRENCY = 3
 
 export async function compare(rawQuery: string, lat: number, lng: number): Promise<ComparisonResult> {
   const query = normalizeQuery(rawQuery)
@@ -21,8 +24,8 @@ export async function compare(rawQuery: string, lat: number, lng: number): Promi
   const category = classifyQuery(query)
   const platforms = PLATFORMS.filter((platform) => PLATFORM_CATEGORY[platform] === category)
 
-  const settled = await Promise.allSettled(
-    platforms.map((platform) => searchPlatform(platform, lat, lng, query)),
+  const settled = await mapWithConcurrency(platforms, SEARCH_CONCURRENCY, (platform) =>
+    searchPlatform(platform, lat, lng, query),
   )
 
   const settledResults: PlatformSearchResult[] = settled.map((outcome, i) => {

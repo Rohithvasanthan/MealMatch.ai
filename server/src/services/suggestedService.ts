@@ -1,9 +1,14 @@
 import { buildSuggestedCacheKey } from "../utils/cacheKey.js"
+import { mapWithConcurrency } from "../utils/concurrency.js"
 import { getCachedSuggested, saveSuggestedCache } from "./cacheService.js"
 import { getSuggested } from "./scraperClient.js"
 import type { Platform, PlatformSuggestedResult, SuggestedFoodsResult } from "../types/domain.js"
 
 const PLATFORMS: Platform[] = ["swiggy", "zomato", "eatsure", "blinkit", "zepto", "instamart", "bigbasket"]
+// See platformsService.ts for why this is throttled rather than fully
+// parallel — `getSuggested` also runs several searches per platform
+// internally, making this the heaviest of the three fan-out endpoints.
+const SUGGESTED_CONCURRENCY = 3
 
 export async function getSuggestedFoods(lat: number, lng: number): Promise<SuggestedFoodsResult> {
   const cacheKey = buildSuggestedCacheKey(lat, lng)
@@ -11,7 +16,9 @@ export async function getSuggestedFoods(lat: number, lng: number): Promise<Sugge
   const cached = await getCachedSuggested(cacheKey)
   if (cached) return cached
 
-  const settled = await Promise.allSettled(PLATFORMS.map((platform) => getSuggested(platform, lat, lng)))
+  const settled = await mapWithConcurrency(PLATFORMS, SUGGESTED_CONCURRENCY, (platform) =>
+    getSuggested(platform, lat, lng),
+  )
 
   const settledResults: PlatformSuggestedResult[] = settled.map((outcome, i) => {
     if (outcome.status === "fulfilled") return outcome.value
