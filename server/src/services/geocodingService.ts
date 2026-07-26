@@ -9,6 +9,26 @@ const nominatimHttp = axios.create({
   headers: { "User-Agent": env.nominatimUserAgent },
 })
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Nominatim's usage policy caps public-instance traffic at ~1 request/second
+// per client. A single rate-limited request is common enough under real
+// traffic to be worth one retry rather than surfacing a hard failure
+// immediately.
+async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn()
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 429) {
+      await delay(1100)
+      return fn()
+    }
+    throw err
+  }
+}
+
 interface NominatimReverseResponse {
   display_name: string
   address?: {
@@ -33,9 +53,11 @@ interface NominatimSearchResult {
 
 export async function reverseGeocode(lat: number, lng: number): Promise<ResolvedLocation> {
   try {
-    const { data } = await nominatimHttp.get<NominatimReverseResponse>("/reverse", {
-      params: { lat, lon: lng, format: "jsonv2" },
-    })
+    const { data } = await withRateLimitRetry(() =>
+      nominatimHttp.get<NominatimReverseResponse>("/reverse", {
+        params: { lat, lon: lng, format: "jsonv2" },
+      }),
+    )
 
     return {
       displayName: data.display_name,
@@ -82,9 +104,11 @@ export function buildFallbackQueries(query: string): string[] {
 }
 
 async function rawSearch(query: string): Promise<NominatimSearchResult[]> {
-  const { data } = await nominatimHttp.get<NominatimSearchResult[]>("/search", {
-    params: { q: query, format: "jsonv2", addressdetails: 1, countrycodes: "in", limit: 6 },
-  })
+  const { data } = await withRateLimitRetry(() =>
+    nominatimHttp.get<NominatimSearchResult[]>("/search", {
+      params: { q: query, format: "jsonv2", addressdetails: 1, countrycodes: "in", limit: 6 },
+    }),
+  )
   return data
 }
 
@@ -93,7 +117,11 @@ export async function searchLocation(query: string): Promise<LocationSuggestion[
     let data = await rawSearch(query)
 
     if (data.length === 0) {
+      // Each fallback attempt is an extra request we're choosing to make on
+      // top of the user's one search — space them out ourselves rather than
+      // relying on the retry above to absorb a self-inflicted rate limit.
       for (const variant of buildFallbackQueries(query)) {
+        await delay(1100)
         data = await rawSearch(variant)
         if (data.length > 0) break
       }
