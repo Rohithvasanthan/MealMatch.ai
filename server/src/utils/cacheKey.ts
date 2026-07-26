@@ -21,3 +21,7 @@ export function buildComparisonCacheKey(query: string, lat: number, lng: number)
 export function buildSuggestedCacheKey(lat: number, lng: number): string {
   return buildLocationKey(lat, lng)
 }
+
+export function buildPlatformAvailabilityCacheKey(lat: number, lng: number): string {
+  return buildLocationKey(lat, lng)
+}

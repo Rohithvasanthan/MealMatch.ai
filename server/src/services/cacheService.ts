@@ -1,6 +1,7 @@
 import { ComparisonCache } from "../models/ComparisonCache.js"
+import { PlatformAvailabilityCache } from "../models/PlatformAvailabilityCache.js"
 import { SuggestedFoodsCache } from "../models/SuggestedFoodsCache.js"
-import type { ComparisonResult, SuggestedFoodsResult } from "../types/domain.js"
+import type { ComparisonResult, PlatformAvailability, SuggestedFoodsResult } from "../types/domain.js"
 
 export async function getCachedComparison(cacheKey: string): Promise<ComparisonResult | null> {
   const doc = await ComparisonCache.findOne({ cacheKey }).lean()
@@ -62,6 +63,25 @@ export async function saveSuggestedCache(
       results: result.results,
       createdAt: new Date(),
     },
+    { upsert: true },
+  )
+}
+
+export async function getCachedPlatformAvailability(cacheKey: string): Promise<PlatformAvailability[] | null> {
+  const doc = await PlatformAvailabilityCache.findOne({ cacheKey }).lean()
+  if (!doc) return null
+  return doc.availability as unknown as PlatformAvailability[]
+}
+
+export async function savePlatformAvailabilityCache(
+  cacheKey: string,
+  lat: number,
+  lng: number,
+  availability: PlatformAvailability[],
+): Promise<void> {
+  await PlatformAvailabilityCache.findOneAndUpdate(
+    { cacheKey },
+    { cacheKey, lat, lng, availability, createdAt: new Date() },
     { upsert: true },
   )
 }
