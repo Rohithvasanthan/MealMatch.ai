@@ -1,4 +1,4 @@
-export type Platform = "swiggy" | "zomato" | "blinkit" | "zepto" | "instamart" | "bigbasket"
+export type Platform = "swiggy" | "zomato" | "eatsure" | "blinkit" | "zepto" | "instamart" | "bigbasket"
 export type Availability = "available" | "not_serviceable" | "error"
 export type ErrorCode =
   | "TIMEOUT"

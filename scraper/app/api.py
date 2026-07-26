@@ -8,7 +8,7 @@ from app.schemas.models import (
     SearchQuery,
     SuggestedResult,
 )
-from app.scrapers import bigbasket, blinkit, instamart, swiggy, zepto, zomato
+from app.scrapers import bigbasket, blinkit, eatsure, instamart, swiggy, zepto, zomato
 from app.scrapers.errors import ScraperError
 
 router = APIRouter(prefix="/scrape")
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/scrape")
 MODULES = {
     "swiggy": swiggy,
     "zomato": zomato,
+    "eatsure": eatsure,
     "blinkit": blinkit,
     "zepto": zepto,
     "instamart": instamart,

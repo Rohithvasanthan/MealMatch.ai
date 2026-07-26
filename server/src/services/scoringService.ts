@@ -3,6 +3,7 @@ import type { BestDeal, MenuItem, Platform, PlatformSearchResult } from "../type
 export const PLATFORM_NAMES: Record<Platform, string> = {
   swiggy: "Swiggy",
   zomato: "Zomato",
+  eatsure: "EatSure",
   blinkit: "Blinkit",
   zepto: "Zepto",
   instamart: "Instamart",
@@ -12,6 +13,7 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
 export const PLATFORM_CATEGORY: Record<Platform, "food" | "grocery"> = {
   swiggy: "food",
   zomato: "food",
+  eatsure: "food",
   blinkit: "grocery",
   zepto: "grocery",
   instamart: "grocery",

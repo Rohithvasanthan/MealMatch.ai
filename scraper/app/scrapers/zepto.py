@@ -25,7 +25,13 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from app.core.config import settings
 from app.schemas.models import MenuItem, PlatformSearchResult, SuggestedFoodItem, SuggestedResult
 from app.scrapers.errors import ScraperError
-from app.scrapers.resilience import jitter, random_user_agent, random_viewport, retry_with_backoff, session_cache
+from app.scrapers.resilience import (
+    jitter,
+    random_user_agent,
+    random_viewport,
+    retry_with_backoff,
+    session_cache,
+)
 
 BASE = "https://www.zeptonow.com"
 CDN_BASE = "https://cdn.zeptonow.com/production"
@@ -37,42 +43,67 @@ def _slugify(name: str) -> str:
     return slug or "item"
 
 
-def _cache_key(lat: float, lng: float) -> str:
-    return f"zepto:{round(lat, 2)}:{round(lng, 2)}"
+SESSION_KEY = "zepto"
 
 
-async def _set_location(page) -> bool:
-    """Loads the homepage and resolves delivery location from geolocation.
-    Returns True if a serviceable location was detected. Zepto sometimes
-    resolves location automatically from the geolocation permission alone
-    (no modal), so a missing "Select Location" prompt is not itself a
-    failure — only the absence of a resolved delivery-time badge is."""
+async def _load_homepage(page) -> None:
+    """Just clears the WAF/bot challenge on the shared browser context — never
+    touches location. Safe to skip on a cache hit since it carries no
+    location state, unlike the old per-location cache key."""
     await retry_with_backoff(
         lambda: page.goto(BASE, timeout=settings.nav_timeout_ms, wait_until="load"),
         attempts=2,
     )
+
+
+async def _resolve_location(page) -> bool:
+    """Resolves delivery location from this context's injected geolocation.
+    Must run in full on every request, cache hit or miss, so the result
+    always reflects the current request's exact coordinates rather than a
+    previously cached address. Returns True if a serviceable location was
+    detected. Zepto sometimes resolves location automatically from the
+    geolocation permission alone (no modal), so a missing "Select Location"
+    prompt is not itself a failure.
+
+    IMPORTANT (verified live against a real non-serviceable address,
+    Pongalur/Tiruppur — 10.9711,77.3770): the delivery-time banner alone is
+    not a valid serviceability signal — for this address it literally
+    rendered as "Delivery in minutes*" (no digit, a generic placeholder),
+    which still satisfies a bare "minutes" text match. (Requiring a digit
+    immediately before "minutes" isn't reliable either — the number and
+    the word render in separate DOM nodes.) The page also showed an
+    explicit "Sit Tight! We're Coming Soon!" banner for that address, which
+    a serviceable page does not show — that's the actual signal checked
+    below."""
     try:
         await page.locator("text=Select Location").first.click(timeout=5000)
         await page.locator("text=Use My Current Location").first.click(timeout=5000)
     except PlaywrightTimeoutError:
         pass
     try:
-        # The delivery-time badge renders the number and the word "minutes"
-        # in separate DOM nodes, so match on the word alone rather than
-        # requiring adjacency to a digit.
         await page.wait_for_selector("text=/minutes|mins\\b/i", timeout=15000)
     except PlaywrightTimeoutError:
         return False
-    return True
+
+    # The "Coming Soon" banner (when present) renders a few seconds after
+    # the minutes/mins banner above — an immediate count() check races it
+    # and reads 0 even on a genuinely non-serviceable address (verified
+    # live), so this must wait for it rather than checking synchronously.
+    coming_soon = page.get_by_text(re.compile("coming soon", re.I))
+    try:
+        await coming_soon.first.wait_for(timeout=4000)
+        return False
+    except PlaywrightTimeoutError:
+        return True
 
 
 async def _prepare(browser: Browser, lat: float, lng: float):
-    """Returns (context, page, serviceable, cache_key). Mirrors Blinkit's
-    session-reuse pattern: cookies/storage from a previously-located session
-    for this approximate location are attached so repeat requests skip the
-    location-detection flow."""
-    cache_key = _cache_key(lat, lng)
-    cached_state = session_cache.get(cache_key)
+    """Returns (context, page, serviceable). The session cache only ever
+    stores cookies captured right after the homepage loads — before location
+    is touched — so a cache hit can only ever skip re-clearing the WAF
+    challenge, never re-resolving the address. Location is always resolved
+    fresh, per request, from this call's exact lat/lng."""
+    cached_state = session_cache.get(SESSION_KEY)
     context = await browser.new_context(
         user_agent=random_user_agent(),
         locale="en-IN",
@@ -87,7 +118,9 @@ async def _prepare(browser: Browser, lat: float, lng: float):
     try:
         if not cached_state:
             await jitter()
-        serviceable = await _set_location(page)
+        await _load_homepage(page)
+        session_cache.set(SESSION_KEY, await context.storage_state())
+        serviceable = await _resolve_location(page)
     except PlaywrightTimeoutError as e:
         await context.close()
         raise ScraperError("TIMEOUT", "Zepto took too long to respond") from e
@@ -95,9 +128,7 @@ async def _prepare(browser: Browser, lat: float, lng: float):
         await context.close()
         raise ScraperError("BLOCKED", f"Could not reach Zepto: {e}") from e
 
-    if serviceable:
-        session_cache.set(cache_key, await context.storage_state())
-    return context, page, serviceable, cache_key
+    return context, page, serviceable
 
 
 def _parse_products(data: dict) -> list[MenuItem]:
@@ -146,10 +177,11 @@ async def _search_products(page, query: str) -> list[MenuItem]:
     await page.wait_for_timeout(800)
 
     search_input = page.locator("input").first
-    async with page.expect_response(
-        lambda r: "bff-gateway.zepto.com/user-search-service" in r.url and r.request.method == "POST",
-        timeout=30000,
-    ) as resp_info:
+
+    def _is_search_response(r):
+        return "bff-gateway.zepto.com/user-search-service" in r.url and r.request.method == "POST"
+
+    async with page.expect_response(_is_search_response, timeout=30000) as resp_info:
         await search_input.click(timeout=8000)
         await page.keyboard.type(query, delay=60)
         await page.wait_for_timeout(400)
@@ -164,13 +196,13 @@ async def _search_products(page, query: str) -> list[MenuItem]:
 
 
 async def check_availability(browser: Browser, lat: float, lng: float) -> bool:
-    context, _page, serviceable, _cache_key_val = await _prepare(browser, lat, lng)
+    context, _page, serviceable = await _prepare(browser, lat, lng)
     await context.close()
     return serviceable
 
 
 async def search(browser: Browser, lat: float, lng: float, query: str) -> PlatformSearchResult:
-    context, page, serviceable, cache_key = await _prepare(browser, lat, lng)
+    context, page, serviceable = await _prepare(browser, lat, lng)
     try:
         if not serviceable:
             return PlatformSearchResult(platform="zepto", availability="not_serviceable")
@@ -185,7 +217,7 @@ async def search(browser: Browser, lat: float, lng: float, query: str) -> Platfo
         return PlatformSearchResult(platform="zepto", availability="available", items=items)
     except ScraperError as e:
         if e.code == "BLOCKED":
-            session_cache.invalidate(cache_key)
+            session_cache.invalidate(SESSION_KEY)
         raise
     except PlaywrightTimeoutError as e:
         raise ScraperError("TIMEOUT", "Zepto took too long to respond") from e
@@ -196,7 +228,7 @@ async def search(browser: Browser, lat: float, lng: float, query: str) -> Platfo
 
 
 async def suggested(browser: Browser, lat: float, lng: float) -> SuggestedResult:
-    context, page, serviceable, _cache_key_val = await _prepare(browser, lat, lng)
+    context, page, serviceable = await _prepare(browser, lat, lng)
     try:
         if not serviceable:
             return SuggestedResult(platform="zepto", availability="not_serviceable")

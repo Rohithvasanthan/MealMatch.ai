@@ -25,7 +25,13 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from app.core.config import settings
 from app.schemas.models import MenuItem, PlatformSearchResult, SuggestedFoodItem, SuggestedResult
 from app.scrapers.errors import ScraperError
-from app.scrapers.resilience import jitter, random_user_agent, random_viewport, retry_with_backoff, session_cache
+from app.scrapers.resilience import (
+    jitter,
+    random_user_agent,
+    random_viewport,
+    retry_with_backoff,
+    session_cache,
+)
 
 BASE = "https://blinkit.com"
 PRICE_RE = re.compile(r"[\d,.]+")
@@ -37,44 +43,62 @@ def _slugify(name: str) -> str:
     return slug or "item"
 
 
-def _cache_key(lat: float, lng: float) -> str:
-    # Rounded to ~1km so repeat requests from the same user/location reuse
-    # the already-located session instead of re-running location detection.
-    return f"blinkit:{round(lat, 2)}:{round(lng, 2)}"
+SESSION_KEY = "blinkit"
 
 
-async def _set_location(page) -> bool:
-    """Loads the homepage and resolves delivery location from geolocation.
-    Returns True if a servicable location was detected."""
+async def _load_homepage(page) -> None:
+    """Just clears the WAF/bot challenge on the shared browser context — never
+    touches location. Safe to skip on a cache hit since it carries no
+    location state, unlike the old per-location cache key."""
     await retry_with_backoff(
         lambda: page.goto(BASE, timeout=settings.nav_timeout_ms, wait_until="domcontentloaded"),
         attempts=2,
     )
+
+
+async def _resolve_location(page) -> bool:
+    """Resolves delivery location from this context's injected geolocation.
+    Must run in full on every request, cache hit or miss, so the result
+    always reflects the current request's exact coordinates rather than a
+    previously cached address. Returns True if a serviceable location was
+    detected.
+
+    IMPORTANT (verified live against a real non-serviceable address,
+    Pongalur/Tiruppur — 10.9711,77.3770): the "Delivery in X minutes"
+    banner is generic header chrome that renders with a plausible-looking
+    time regardless of real serviceability — it showed "Delivery in 8
+    minutes" on a page whose body simultaneously read "Oops! Blinkit is
+    not available at this location at the moment." So that banner is NOT a
+    valid signal. `[class*="SearchBar"]` (used elsewhere in this module)
+    isn't valid either — it's persistent header chrome present on the
+    error page too (verified: count 15, same as a serviceable page). The
+    explicit "not available at this location" error text is the only
+    signal confirmed to actually track real serviceability."""
     try:
         await page.click("button:has-text('Detect my location')", timeout=5000)
     except PlaywrightTimeoutError:
         # Location prompt may not appear if a location is already set for this context.
         pass
     try:
-        await page.wait_for_selector("text=Delivery in", timeout=10000)
-    except PlaywrightTimeoutError:
-        return False
-    try:
         await page.wait_for_selector("text=Preparing your experience", state="hidden", timeout=10000)
     except PlaywrightTimeoutError:
         pass
-    return True
+
+    not_available = page.get_by_text(re.compile("not available at this location", re.I))
+    try:
+        await not_available.first.wait_for(timeout=4000)
+        return False
+    except PlaywrightTimeoutError:
+        return True
 
 
 async def _prepare(browser: Browser, lat: float, lng: float):
-    """Returns (context, page, serviceable, cache_key). When a cached,
-    already-located session exists for this approximate location, its cookies
-    are attached to the new context — Blinkit then recognizes the location
-    server-side and `_set_location` resolves it immediately without needing
-    to click "Detect my location" again (that step already no-ops gracefully
-    when the prompt doesn't appear, which is exactly what happens here)."""
-    cache_key = _cache_key(lat, lng)
-    cached_state = session_cache.get(cache_key)
+    """Returns (context, page, serviceable). The session cache only ever
+    stores cookies captured right after the homepage loads — before location
+    is touched — so a cache hit can only ever skip re-clearing the WAF
+    challenge, never re-resolving the address. Location is always resolved
+    fresh, per request, from this call's exact lat/lng."""
+    cached_state = session_cache.get(SESSION_KEY)
     context = await browser.new_context(
         user_agent=random_user_agent(),
         locale="en-IN",
@@ -89,7 +113,9 @@ async def _prepare(browser: Browser, lat: float, lng: float):
     try:
         if not cached_state:
             await jitter()
-        serviceable = await _set_location(page)
+        await _load_homepage(page)
+        session_cache.set(SESSION_KEY, await context.storage_state())
+        serviceable = await _resolve_location(page)
     except PlaywrightTimeoutError as e:
         await context.close()
         raise ScraperError("TIMEOUT", "Blinkit took too long to respond") from e
@@ -97,9 +123,7 @@ async def _prepare(browser: Browser, lat: float, lng: float):
         await context.close()
         raise ScraperError("BLOCKED", f"Could not reach Blinkit: {e}") from e
 
-    if serviceable:
-        session_cache.set(cache_key, await context.storage_state())
-    return context, page, serviceable, cache_key
+    return context, page, serviceable
 
 
 def _parse_products(data: dict) -> list[MenuItem]:
@@ -140,7 +164,7 @@ def _parse_products(data: dict) -> list[MenuItem]:
     return items
 
 
-async def _search_products(page, query: str, cache_key: str) -> list[MenuItem]:
+async def _search_products(page, query: str) -> list[MenuItem]:
     async with page.expect_response(
         lambda r: "/v1/layout/search" in r.url and "q=" in r.url, timeout=25000
     ) as resp_info:
@@ -149,7 +173,7 @@ async def _search_products(page, query: str, cache_key: str) -> list[MenuItem]:
         await page.keyboard.type(query, delay=60)
     response = await resp_info.value
     if response.status in (403, 429):
-        session_cache.invalidate(cache_key)
+        session_cache.invalidate(SESSION_KEY)
         raise ScraperError("BLOCKED", f"Blinkit blocked the request (status {response.status})")
     if not response.ok:
         raise ScraperError("UPSTREAM_ERROR", f"Blinkit returned status {response.status}")
@@ -158,17 +182,17 @@ async def _search_products(page, query: str, cache_key: str) -> list[MenuItem]:
 
 
 async def check_availability(browser: Browser, lat: float, lng: float) -> bool:
-    context, _page, serviceable, _cache_key_val = await _prepare(browser, lat, lng)
+    context, _page, serviceable = await _prepare(browser, lat, lng)
     await context.close()
     return serviceable
 
 
 async def search(browser: Browser, lat: float, lng: float, query: str) -> PlatformSearchResult:
-    context, page, serviceable, cache_key = await _prepare(browser, lat, lng)
+    context, page, serviceable = await _prepare(browser, lat, lng)
     try:
         if not serviceable:
             return PlatformSearchResult(platform="blinkit", availability="not_serviceable")
-        items = await _search_products(page, query, cache_key)
+        items = await _search_products(page, query)
         if not items:
             return PlatformSearchResult(
                 platform="blinkit",
@@ -188,7 +212,7 @@ async def search(browser: Browser, lat: float, lng: float, query: str) -> Platfo
 
 
 async def suggested(browser: Browser, lat: float, lng: float) -> SuggestedResult:
-    context, page, serviceable, cache_key = await _prepare(browser, lat, lng)
+    context, page, serviceable = await _prepare(browser, lat, lng)
     try:
         if not serviceable:
             return SuggestedResult(platform="blinkit", availability="not_serviceable")
@@ -197,7 +221,7 @@ async def suggested(browser: Browser, lat: float, lng: float) -> SuggestedResult
         for term in SUGGESTED_QUERIES:
             await jitter(100, 350)
             try:
-                products = await _search_products(page, term, cache_key)
+                products = await _search_products(page, term)
             except ScraperError:
                 continue
             for p in products:

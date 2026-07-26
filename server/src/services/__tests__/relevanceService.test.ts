@@ -30,6 +30,11 @@ describe("classifyQuery", () => {
   it("defaults ambiguous/unknown queries to food", () => {
     expect(classifyQuery("xyz123")).toBe("food")
   })
+
+  it("does not misclassify a food word that merely contains a grocery keyword as a substring", () => {
+    expect(classifyQuery("veggie burger")).toBe("food")
+    expect(classifyQuery("steak")).toBe("food")
+  })
 })
 
 describe("filterRelevantItems", () => {

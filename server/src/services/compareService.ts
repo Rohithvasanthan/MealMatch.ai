@@ -6,7 +6,7 @@ import { searchPlatform } from "./scraperClient.js"
 import { computeBestDeal, PLATFORM_CATEGORY, PLATFORM_NAMES, sortByPriority } from "./scoringService.js"
 import type { ComparisonResult, Platform, PlatformSearchResult } from "../types/domain.js"
 
-const PLATFORMS: Platform[] = ["swiggy", "zomato", "blinkit", "zepto", "instamart", "bigbasket"]
+const PLATFORMS: Platform[] = ["swiggy", "zomato", "eatsure", "blinkit", "zepto", "instamart", "bigbasket"]
 
 export async function compare(rawQuery: string, lat: number, lng: number): Promise<ComparisonResult> {
   const query = normalizeQuery(rawQuery)

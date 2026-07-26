@@ -18,6 +18,8 @@ const GROCERY_KEYWORDS = [
   "cleaning", "toiletries", "sanitizer", "napkins",
 ]
 
+const GROCERY_KEYWORDS_SET = new Set(GROCERY_KEYWORDS)
+
 const STOPWORDS = new Set(["a", "an", "the", "and", "or", "with", "for", "of", "in", "near", "me"])
 
 function tokenize(text: string): string[] {
@@ -29,7 +31,7 @@ function tokenize(text: string): string[] {
 
 export function classifyQuery(query: string): QueryCategory {
   const tokens = tokenize(query)
-  const isGrocery = tokens.some((token) => GROCERY_KEYWORDS.some((kw) => token === kw || token.includes(kw)))
+  const isGrocery = tokens.some((token) => GROCERY_KEYWORDS_SET.has(token))
   return isGrocery ? "grocery" : "food"
 }
 

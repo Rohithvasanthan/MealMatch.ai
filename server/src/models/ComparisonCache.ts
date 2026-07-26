@@ -21,7 +21,7 @@ const MenuItemSchema = new Schema(
   { _id: false },
 )
 
-const PLATFORMS = ["swiggy", "zomato", "blinkit"]
+const PLATFORMS = ["swiggy", "zomato", "eatsure", "blinkit", "zepto", "instamart", "bigbasket"]
 
 const PlatformResultSchema = new Schema(
   {

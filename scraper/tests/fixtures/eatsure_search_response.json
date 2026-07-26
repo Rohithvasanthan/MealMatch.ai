@@ -1,0 +1,44 @@
+{
+  "data": {
+    "search_meta_data": {
+      "products_query_id": "4631024b53075d31af0f839ad208380a",
+      "total_records": 2,
+      "total_pages": 1,
+      "has_next_page": false
+    },
+    "products": [
+      {
+        "sequenceID": 1,
+        "objectID": "store_id_10229_product_id_200054605",
+        "product_id": 200054605,
+        "product_name": "Lucknowi Lazeez Bhuna Murgh Biryani (Dum Chicken Biryani)(Mild Spicy)",
+        "product_code": "PRD358410403",
+        "price": 359,
+        "is_veg": 0,
+        "is_available": 1,
+        "rating": 4.2,
+        "store_id": 10229,
+        "image": "https://rp-media.faasos.io/catalog/images/OBPFJ1OUDNOY.jpeg",
+        "brand_id": 26
+      },
+      {
+        "sequenceID": 2,
+        "objectID": "store_id_10229_product_id_200099999",
+        "product_id": 200099999,
+        "product_name": "Sold Out Family Combo",
+        "product_code": "PRD999999999",
+        "price": 899,
+        "is_veg": 1,
+        "is_available": 0,
+        "rating": 4.0,
+        "store_id": 10229,
+        "image": null,
+        "brand_id": 26
+      }
+    ],
+    "categories": [],
+    "combos": [],
+    "brands": []
+  },
+  "trace_id": "abc123"
+}

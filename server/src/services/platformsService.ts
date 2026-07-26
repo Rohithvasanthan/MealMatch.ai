@@ -2,7 +2,7 @@ import { checkAvailability } from "./scraperClient.js"
 import type { Platform, PlatformAvailability } from "../types/domain.js"
 
 export async function getPlatformAvailability(lat: number, lng: number): Promise<PlatformAvailability[]> {
-  const platforms: Platform[] = ["swiggy", "zomato", "blinkit", "zepto", "instamart", "bigbasket"]
+  const platforms: Platform[] = ["swiggy", "zomato", "eatsure", "blinkit", "zepto", "instamart", "bigbasket"]
   const results = await Promise.allSettled(
     platforms.map((platform) => checkAvailability(platform, lat, lng)),
   )
